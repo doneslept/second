@@ -291,7 +291,28 @@
             padding: 20px 24px;
             margin-bottom: 24px;
         }
-
+            /* 新增：策略检查结果的样式 */
+    #policyResults .policy-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px;
+        margin-bottom: 6px;
+        border-radius: 8px;
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    #policyResults .policy-item .label {
+        color: #99aabb;
+        font-weight: 500;
+    }
+    #policyResults .policy-item .value {
+        font-family: 'Courier New', monospace;
+        color: #00e396;
+    }
+    #policyResults .policy-item.error .value {
+        color: #ff6b6b;
+    }
         .rules-panel h3 {
             color: #3a7bd5;
             margin-bottom: 12px;
@@ -341,7 +362,15 @@
         <h1>🔐 密码强度检测工具</h1>
         <p>随机生成密码 → 自动检测强弱 → 分类展示结果</p>
     </div>
+    <!-- 系统策略检查面板 -->
+<div class="control-panel" style="margin-top: 24px;">
+    <button class="btn btn-primary" onclick="checkSystemPolicies()">🛡️ 检查系统密码策略</button>
+</div>
 
+<div class="rules-panel" id="policyResultPanel" style="display: none;">
+    <h3>📋 系统密码策略检查结果</h3>
+    <div id="policyResults"></div>
+</div>
     <!-- 规则说明 -->
     <div class="rules-panel">
         <h3>📋 检测规则 & 生成策略说明</h3>
@@ -916,6 +945,84 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+// ========== 系统密码策略检查逻辑 ==========
+async function checkSystemPolicies() {
+    const resultPanel = document.getElementById('policyResultPanel');
+    const resultsDiv = document.getElementById('policyResults');
+    
+    // 显示加载状态
+    resultPanel.style.display = 'block';
+    resultsDiv.innerHTML = '<p style="color: #8899aa; text-align: center;">正在读取系统配置...</p>';
+
+    try {
+        // 使用 fetch API 尝试读取系统文件
+        // 注意：这在浏览器中通常会因为跨域或文件协议限制而失败，
+        // 但这是在不使用后端的情况下，前端能做的唯一尝试。
+        const loginDefsRes = await fetch('/etc/login.defs');
+        const shadowRes = await fetch('/etc/shadow'); // 仅用于检查可读性，不解析内容
+        
+        if (!loginDefsRes.ok) throw new Error('无法读取配置文件');
+
+        const loginDefsText = await loginDefsRes.text();
+        
+        const policies = {
+            '密码最长使用期限 (PASS_MAX_DAYS)': '未设置',
+            '密码最短使用期限 (PASS_MIN_DAYS)': '未设置',
+            '密码最小长度 (PASS_MIN_LEN)': '未设置',
+            '密码过期前警告天数 (PASS_WARN_AGE)': '未设置',
+        };
+
+        // 解析 /etc/login.defs 文件
+        const lines = loginDefsText.split('\n');
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine && !trimmedLine.startsWith('#')) {
+                const parts = trimmedLine.split(/\s+/);
+                const key = parts[0];
+                const value = parts[1];
+                if (key === 'PASS_MAX_DAYS') policies['密码最长使用期限 (PASS_MAX_DAYS)'] = value;
+                if (key === 'PASS_MIN_DAYS') policies['密码最短使用期限 (PASS_MIN_DAYS)'] = value;
+                if (key === 'PASS_MIN_LEN') policies['密码最小长度 (PASS_MIN_LEN)'] = value;
+                if (key === 'PASS_WARN_AGE') policies['密码过期前警告天数 (PASS_WARN_AGE)'] = value;
+            }
+        }
+
+        // 渲染结果
+        resultsDiv.innerHTML = Object.entries(policies).map(([label, value]) => `
+            <div class="policy-item">
+                <span class="label">${label}</span>
+                <span class="value">${value === '未设置' ? '未设置' : value + ' 天'}</span>
+            </div>
+        `).join('');
+
+        // 添加关于其他策略的说明
+        resultsDiv.innerHTML += `
+            <div class="policy-item" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                <span class="label" style="width: 100%; color: #f7b731;">
+                    ⚠️ 注意：密码历史、账户锁定等策略通常在 PAM 模块中配置，
+                    由于浏览器安全限制，前端无法直接读取。建议在服务器终端使用专用脚本检查。
+                </span>
+            </div>
+        `;
+
+    } catch (error) {
+        // 处理读取失败的情况（这在浏览器中是预期行为）
+        console.error('策略检查失败:', error);
+        resultsDiv.innerHTML = `
+            <div class="policy-item error">
+                <span class="label" style="width: 100%; color: #ff6b6b;">
+                    ❌ 检查失败：由于浏览器的安全沙箱机制，网页无法直接读取您服务器上的系统配置文件（如 /etc/login.defs）。
+                </span>
+            </div>
+            <div class="policy-item" style="margin-top: 15px;">
+                <span class="label" style="width: 100%; color: #8899aa;">
+                    💡 解决方案：此功能需要在服务器端（如使用Node.js, Python, Bash等）执行。
+                    您可以将我之前提供的 Bash 脚本保存到您的 Linux 服务器上运行，以获得准确的检查结果。
+                </span>
+            </div>
+        `;
+    }
 }
 </script>
 

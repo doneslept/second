@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统密码策略检查工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #1a1a2e;
+            color: #eaeaea;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+        .container {
+            background-color: #16213e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #00d2ff;
+            margin-bottom: 30px;
+        }
+        .policy-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .policy-label {
+            font-weight: 600;
+            color: #99aabb;
+        }
+        .policy-value {
+            font-family: 'Courier New', monospace;
+            color: #00e396;
+            font-weight: bold;
+        }
+        .status-ok { color: #00e396; }
+        .status-warn { color: #f7b731; }
+        .status-bad { color: #ff6b6b; }
+        .btn-check {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 30px;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-check:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ 系统密码策略检查</h1>
+        
+        <div class="policy-item">
+            <span class="policy-label">密码最小长度</span>
+            <span id="val-length" class="policy-value">--</span>
+        </div>
+        <div class="policy-item">
+            <span class="policy-label">密码复杂度要求</span>
+            <span id="val-complexity" class="policy-value">--</span>
+        </div>
+        <div class="policy-item">
+            <span class="policy-label">密码历史记录数</span>
+            <span id="val-history" class="policy-value">--</span>
+        </div>
+        <div class="policy-item">
+            <span class="policy-label">账户锁定阈值</span>
+            <span id="val-lockout" class="policy-value">--</span>
+        </div>
+        <div class="policy-item">
+            <span class="policy-label">密码最长使用期限</span>
+            <span id="val-expire" class="policy-value">--</span>
+        </div>
+
+        <button class="btn-check" onclick="simulateCheck()">模拟检查策略</button>
+    </div>
+
+    <script>
+        function simulateCheck() {
+            // 这里只是模拟数据，展示网页可以实现的效果
+            document.getElementById('val-length').textContent = "12 位";
+            document.getElementById('val-length').className = "policy-value status-ok";
+
+            document.getElementById('val-complexity').textContent = "需包含3种字符";
+            document.getElementById('val-complexity').className = "policy-value status-ok";
+
+            document.getElementById('val-history').textContent = "记住最近 5 个";
+            document.getElementById('val-history').className = "policy-value status-warn";
+
+            document.getElementById('val-lockout').textContent = "5 次失败后锁定";
+            document.getElementById('val-lockout').className = "policy-value status-ok";
+
+            document.getElementById('val-expire').textContent = "90 天";
+            document.getElementById('val-expire').className = "policy-value status-warn";
+        }
+    </script>
+</body>
+</html>
